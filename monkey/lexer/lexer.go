@@ -7,7 +7,7 @@ import (
 type Lexer struct {
 	input        string
 	position     int  // 入力における現在の位置
-	readPosition int  //これから読み込むいち（現在の文字の次）
+	readPosition int  // これから読み込む位置（現在の文字の次）
 	ch           byte // 現在検査中の文字
 }
 
@@ -22,8 +22,10 @@ func New(input string) *Lexer {
 // 次の文字を読んでいく関数
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
+		// もしinputよりもreadPositionの方が先をいっていたら、検査中の文字のバイトは空、すなわち0にして返す。
 		l.ch = 0
 	} else {
+		// 普通に読み込むべき位置ならinputで渡ってきてるstringのreadpositionの値を入れる
 		l.ch = l.input[l.readPosition]
 	}
 	l.position = l.readPosition
@@ -43,6 +45,7 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.LookupIdent(tok.Literal)
 			return tok
 		} else if isDigit(l.ch) {
+			// 数字だったら
 			tok.Type = token.INT
 			tok.Literal = l.readNumber()
 			return tok
@@ -50,7 +53,6 @@ func (l *Lexer) NextToken() token.Token {
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
 	case '=':
-		//
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
@@ -106,11 +108,12 @@ func newToken(tokenType token.TokenType, ch byte) token.Token {
 
 // 識別子を読む
 func (l *Lexer) readIdentifier() string {
+	// 文字である限り、ひたすら読み進める
 	position := l.position
 	for isLetter(l.ch) {
 		l.readChar()
 	}
-	return l.input[position:l.position] // 何を返してるんだ？
+	return l.input[position:l.position] // 区切りまで読んだら、読み始めた位置から、区切りの直前の文字を返している -> 例えば [4:10]みたいにして4文字目から10文字目までを返すみたいなことをやっている
 }
 
 // 文字か否か _ もmonkeyは対応する
