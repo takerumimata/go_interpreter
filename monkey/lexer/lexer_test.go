@@ -74,9 +74,6 @@ func TestNextToken(t *testing.T) {
 		{token.EOF, ""},
 	}
 
-	//!-/*5;
-	//5 < 10 > 5;
-
 	l := New(input)
 
 	for i, tt := range tests {
