@@ -2,10 +2,19 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/user"
 
-	"rsc.io/quote"
+	"github.com/takerumimata/go_interpreter/monkey/repl"
 )
 
 func main() {
-	fmt.Println(quote.Hello())
+	user, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Hello %s! This is the Monkey programming language!\n",
+		user.Username)
+	fmt.Printf("Feel free to type in commands!\n")
+	repl.Start(os.Stdin, os.Stdout)
 }
