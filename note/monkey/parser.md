@@ -43,8 +43,10 @@ function parseLetStatement() {
         parseExpression("no equal sign!")
     }
 
+    // 次のtokenを読み込む
     advanceTokens()
 
+    // 整数, + などをパース
     value = parseExpression()
 
     variableStatement = newVariableStatementASTNode()
@@ -53,12 +55,15 @@ function parseLetStatement() {
     return variableStatement
 }
 
+
+// identifier（変数名）をパースする
 function parseIdentifier() {
     identifier = newIdentifierASTNode()
     identifier.token = currentToken()
     return identifier
 }
 
+// 整数, +、;、(などをパースする
 function parseExpression() {
     if (currentToken() == INTEGER_TOKEN) {
         if(nextToken() == PLUS_TOKEN) {
