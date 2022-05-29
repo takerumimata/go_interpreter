@@ -23,7 +23,7 @@ func New(input string) *Lexer {
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
 		// もしinputよりもreadPositionの方が先をいっていたら、検査中の文字のバイトは空、すなわち0にして返す。
-		l.ch = 0
+		l.ch = 0 // asciiにおけるNULLに相当
 	} else {
 		// 普通に読み込むべき位置ならinputで渡ってきてるstringのreadpositionの値を入れる
 		l.ch = l.input[l.readPosition]
@@ -32,7 +32,7 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
-// 現在検査中の文字l.chをみてその文字がなんであるかに応じてトークンを返す。
+// 現在検査中の文字 l.ch をみてその文字がなんであるかに応じてトークンを返す。
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
@@ -106,27 +106,16 @@ func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
 }
 
-// 識別子を読む
+// 文字である限りひたすら読み続け、読み始めた位置から区切りの直前の文字を返す。
 func (l *Lexer) readIdentifier() string {
-	// 文字である限り、ひたすら読み進める
 	position := l.position
 	for isLetter(l.ch) {
 		l.readChar()
 	}
-	return l.input[position:l.position] // 区切りまで読んだら、読み始めた位置から、区切りの直前の文字を返している -> 例えば [4:10]みたいにして4文字目から10文字目までを返すみたいなことをやっている
+	return l.input[position:l.position] // 区切りまで読んだら、読み始めた位置から、区切りの直前の文字を返している -> e.g.) [4:10]みたいにして4文字目から10文字目までを返すみたいなことをやっている
 }
 
-// 文字か否か _ もmonkeyは対応する
-func isLetter(ch byte) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
-}
-
-func (l *Lexer) skipWhitespace() {
-	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
-		l.readChar()
-	}
-}
-
+// 数字である限り読み続け、読み始めた位置から区切りの直前の文字を返す。
 func (l *Lexer) readNumber() string {
 	position := l.position
 	for isDigit(l.ch) {
@@ -135,14 +124,26 @@ func (l *Lexer) readNumber() string {
 	return l.input[position:l.position]
 }
 
+// 文字か否か _ もmonkeyは対応する
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+}
+
+// {空白、タブ、改行}文字をスキップする関数
+func (l *Lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
 func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
 }
 
-/* 次の文字を覗き見するのがこの関数の役割！
+/* 次の文字を覗き見するのがこの関数の役割。
 例えば = と == はどうやって区別する？
-= を読んだ時点でそれをtokenと認識してしまうと == はtokenとして処理されない
-次の文字をあらかじめみておくことでこの問題を回避する
+= を読んだ時点でそれをtokenと認識してしまうと == はtokenとして処理されない。
+次の文字をあらかじめみておくことでこの問題を回避する。
 */
 func (l *Lexer) peekChar() byte {
 	if l.readPosition >= len(l.input) {
